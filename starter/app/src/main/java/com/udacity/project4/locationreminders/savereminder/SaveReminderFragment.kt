@@ -17,13 +17,13 @@ import com.udacity.project4.base.NavigationCommand
 import com.udacity.project4.databinding.FragmentSaveReminderBinding
 import com.udacity.project4.locationreminders.geofence.GeofenceBroadcastReceiver
 import com.udacity.project4.locationreminders.reminderslist.ReminderDataItem
+import com.udacity.project4.utils.ACTION_GEOFENCE_EVENT
+import com.udacity.project4.utils.GEOFENCE_EXPIRATION_IN_MILLISECONDS
+import com.udacity.project4.utils.GEOFENCE_RADIUS_IN_METERS
 import com.udacity.project4.utils.setDisplayHomeAsUpEnabled
 import org.koin.android.ext.android.inject
 
-const val ACTION_GEOFENCE_EVENT = "GEO_FENCE_EVENT"
-private const val GEOFENCE_EXPIRATION_IN_HOURS: Long = 12
-const val GEOFENCE_EXPIRATION_IN_MILLISECONDS = GEOFENCE_EXPIRATION_IN_HOURS * 60 * 60 * 1000
-const val GEOFENCE_RADIUS_IN_METERS = 1609f
+
 
 class SaveReminderFragment : BaseFragment() {
     //Get the view model this time as a single to be shared with the another fragment
