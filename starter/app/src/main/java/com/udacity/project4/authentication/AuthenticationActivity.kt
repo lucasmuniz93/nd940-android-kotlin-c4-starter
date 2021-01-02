@@ -31,7 +31,6 @@ class AuthenticationActivity : AppCompatActivity() {
     }
 
     private lateinit var binding: ActivityAuthenticationBinding
-    private val viewModel by viewModels<AuthenticationViewModel>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,14 +42,6 @@ class AuthenticationActivity : AppCompatActivity() {
         //https://github.com/firebase/FirebaseUI-Android/blob/master/auth/README.md#custom-layout
         binding.btnLogin.setOnClickListener { launchSignInFlow() }
 
-        viewModel.authenticationState.observe(this, Observer {
-            when (it) {
-                AuthenticationViewModel.AuthenticationState.AUTHENTICATED -> {
-                    val intent = Intent(this, RemindersActivity::class.java)
-                    startActivity(intent)
-                }
-            }
-        })
     }
 
     private fun launchSignInFlow() {
@@ -80,6 +71,8 @@ class AuthenticationActivity : AppCompatActivity() {
                     "Successfully signed in user " +
                             "${FirebaseAuth.getInstance().currentUser?.displayName}!"
                 )
+                val intent = Intent(this, RemindersActivity::class.java)
+                startActivity(intent)
             } else {
                 // Sign in failed. If response is null the user canceled the sign-in flow using
                 // the back button. Otherwise check response.getError().getErrorCode() and handle
