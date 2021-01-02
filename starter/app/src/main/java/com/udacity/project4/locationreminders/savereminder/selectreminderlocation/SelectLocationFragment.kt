@@ -13,7 +13,6 @@ import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
 import android.view.*
-import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.databinding.DataBindingUtil
 import com.google.android.gms.common.api.ResolvableApiException
@@ -68,10 +67,6 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
          */
         getLastLocationAndSetUserLocation()
 
-        /**
-         * Call this function after the user confirms on the selected location
-         */
-        onLocationSelected()
 
         return binding.root
     }
@@ -127,7 +122,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 
     private fun checkPermissions() {
         if (foregroundAndBackgroundLocationPermissionApproved()) {
-            checkDeviceLocationSettings()
+            checkDeviceLocationSettingsAndStartGeofence()
         } else {
             requestForegroundAndBackgroundLocationPermissions()
         }
@@ -193,7 +188,10 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         setPoiClick(map)
         setMapStyle(map)
         setMapLongClick(map)
-
+        /**
+         * Call this function after the user confirms on the selected location
+         */
+        onLocationSelected()
     }
 
     override fun onRequestPermissionsResult(
@@ -222,49 +220,39 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
                 }.show()
             _viewModel.showErrorMessage.value = R.string.permission_denied_explanation.toString()
         } else {
-            checkDeviceLocationSettings()
+            checkDeviceLocationSettingsAndStartGeofence()
         }
     }
 
-    private fun checkDeviceLocationSettings(resolve: Boolean = true) {
+    private fun checkDeviceLocationSettingsAndStartGeofence(resolve: Boolean = true) {
         val locationRequest = LocationRequest.create().apply {
             priority = LocationRequest.PRIORITY_LOW_POWER
         }
         val builder = LocationSettingsRequest.Builder().addLocationRequest(locationRequest)
-
         val settingsClient = LocationServices.getSettingsClient(requireContext())
         val locationSettingsResponseTask =
             settingsClient.checkLocationSettings(builder.build())
-
         locationSettingsResponseTask.addOnFailureListener { exception ->
-            if (exception is ResolvableApiException && resolve) {
+            if (exception is ResolvableApiException && resolve){
                 try {
-                    exception.startResolutionForResult(
-                        activity,
-                        REQUEST_TURN_DEVICE_LOCATION_ON
-                    )
+                    exception.startResolutionForResult(requireActivity(),
+                        REQUEST_TURN_DEVICE_LOCATION_ON)
                 } catch (sendEx: IntentSender.SendIntentException) {
-                    Log.d(TAG, "Error geting location settings resolution: " + sendEx.message)
+                    Log.d(TAG, "Error getting location settings resolution: " + sendEx.message)
                 }
             } else {
-                Snackbar.make(
-                    binding.mapContainer,
-                    R.string.location_required_error, Snackbar.LENGTH_INDEFINITE
-                ).setAction(android.R.string.ok) {
-                    checkDeviceLocationSettings()
-                }.show()
-                _viewModel.showErrorMessage.value = R.string.location_required_error.toString()
+//                Snackbar.make(
+//                    binding.activityMapsMain,
+//                    R.string.location_required_error, Snackbar.LENGTH_INDEFINITE
+//                ).setAction(android.R.string.ok) {
+//                    checkDeviceLocationSettingsAndStartGeofence()
+//                }.show()
             }
         }
         locationSettingsResponseTask.addOnCompleteListener {
-            if (it.isSuccessful) {
-                map.isMyLocationEnabled = true
-                Toast.makeText(
-                    requireContext(),
-                    getString(R.string.long_click_confirmation),
-                    Toast.LENGTH_LONG
-                ).show()
-            }
+//            if ( it.isSuccessful ) {
+//                addGeofenceForClue()
+//            }
         }
     }
 
