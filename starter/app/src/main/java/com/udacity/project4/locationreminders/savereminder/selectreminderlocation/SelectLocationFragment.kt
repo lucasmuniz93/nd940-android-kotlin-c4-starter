@@ -318,8 +318,23 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
                 .addOnSuccessListener { location : Location? ->
                    location.let {
                        setUserLocationMarkAndMoveCamera(location)
+                       setUserCurrentLocationListener(location)
                    }
                 }
+        }
+    }
+
+    private fun setUserCurrentLocationListener(location: Location?) {
+        binding.btnSave.setOnClickListener {
+           location.let {
+               _viewModel.showToast.postValue("User Current Location")
+//                       _viewModel.selectedPOI.postValue(it)
+               _viewModel.latitude.postValue(location?.latitude)
+               _viewModel.longitude.postValue(location?.longitude)
+               _viewModel.reminderSelectedLocationStr.postValue("User Current Location")
+               _viewModel.navigationCommand.postValue(
+                   NavigationCommand.Back)
+           }
         }
     }
 
