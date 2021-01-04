@@ -10,6 +10,7 @@ import android.content.res.Resources
 import android.location.Location
 import android.net.Uri
 import android.os.Bundle
+import android.os.Looper
 import android.provider.Settings
 import android.util.Log
 import android.view.*
@@ -65,8 +66,6 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         /**
          *  Get the user last location and zoom the map after taking his permission
          */
-        getLastLocationAndSetUserLocation()
-
 
         return binding.root
     }
@@ -76,23 +75,17 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 //                 send back the selected location details to the view model
 //                 and navigate back to the previous fragment to save the reminder and add the geofence
         map.let {
-          it.setOnPoiClickListener { poi ->
-              _viewModel.showToast.postValue("Point of interest selected")
-              _viewModel.selectedPOI.postValue(poi)
-              _viewModel.latitude.postValue(poi.latLng.latitude)
-              _viewModel.longitude.postValue(poi.latLng.longitude)
-              _viewModel.reminderSelectedLocationStr.postValue(poi.name)
-              _viewModel.navigationCommand.postValue(
-                  NavigationCommand.Back
-              )
-
-          }
+            it.setOnPoiClickListener { poi ->
+                _viewModel.showToast.postValue("Point of interest selected")
+                _viewModel.selectedPOI.postValue(poi)
+                _viewModel.latitude.postValue(poi.latLng.latitude)
+                _viewModel.longitude.postValue(poi.latLng.longitude)
+                _viewModel.reminderSelectedLocationStr.postValue(poi.name)
+                _viewModel.navigationCommand.postValue(
+                    NavigationCommand.Back
+                )
+            }
         }
-    }
-
-    override fun onStart() {
-        super.onStart()
-        checkPermissions()
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -187,11 +180,11 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 
         setPoiClick(map)
         setMapStyle(map)
-        setMapLongClick(map)
         /**
          * Call this function after the user confirms on the selected location
          */
         onLocationSelected()
+        getLastLocationAndSetUserLocation()
     }
 
     override fun onRequestPermissionsResult(
@@ -233,10 +226,12 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         val locationSettingsResponseTask =
             settingsClient.checkLocationSettings(builder.build())
         locationSettingsResponseTask.addOnFailureListener { exception ->
-            if (exception is ResolvableApiException && resolve){
+            if (exception is ResolvableApiException && resolve) {
                 try {
-                    exception.startResolutionForResult(requireActivity(),
-                        REQUEST_TURN_DEVICE_LOCATION_ON)
+                    exception.startResolutionForResult(
+                        requireActivity(),
+                        REQUEST_TURN_DEVICE_LOCATION_ON
+                    )
                 } catch (sendEx: IntentSender.SendIntentException) {
                     Log.d(TAG, "Error getting location settings resolution: " + sendEx.message)
                 }
@@ -248,33 +243,6 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 //                    checkDeviceLocationSettingsAndStartGeofence()
 //                }.show()
             }
-        }
-        locationSettingsResponseTask.addOnCompleteListener {
-//            if ( it.isSuccessful ) {
-//                addGeofenceForClue()
-//            }
-        }
-    }
-
-    /**
-     * Put a marker to location that the user selected
-     */
-    private fun setMapLongClick(map: GoogleMap) {
-        map.setOnMapLongClickListener { latLng ->
-            // A Snippet is Additional text that's displayed below the title.
-            val snippet = String.format(
-                Locale.getDefault(),
-                "Lat: %1$.5f, Long: %2$.5f",
-                latLng.latitude,
-                latLng.longitude
-            )
-            map.addMarker(
-                MarkerOptions()
-                    .position(latLng)
-                    .title(getString(R.string.dropped_pin))
-                    .snippet(snippet)
-                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE))
-            )
         }
     }
 
@@ -311,37 +279,41 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         }
     }
 
-    private fun getLastLocationAndSetUserLocation(){
-        if(foregroundAndBackgroundLocationPermissionApproved()){
-             val fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireContext())
+    private fun getLastLocationAndSetUserLocation() {
+        if (foregroundAndBackgroundLocationPermissionApproved()) {
+            val fusedLocationClient =
+                LocationServices.getFusedLocationProviderClient(requireContext())
             fusedLocationClient.lastLocation
-                .addOnSuccessListener { location : Location? ->
-                   location.let {
-                       setUserLocationMarkAndMoveCamera(location)
-                       setUserCurrentLocationListener(location)
-                   }
+                .addOnSuccessListener { location: Location? ->
+                    location.let {
+                        setUserLocationMarkAndMoveCamera(location)
+                        setUserCurrentLocationListener(location)
+                    }
                 }
         }
     }
 
     private fun setUserCurrentLocationListener(location: Location?) {
         binding.btnSave.setOnClickListener {
-           location.let {
-               _viewModel.showToast.postValue("User Current Location")
+            location.let {
+                _viewModel.showToast.postValue("User Current Location")
 //                       _viewModel.selectedPOI.postValue(it)
-               _viewModel.latitude.postValue(location?.latitude)
-               _viewModel.longitude.postValue(location?.longitude)
-               _viewModel.reminderSelectedLocationStr.postValue("User Current Location")
-               _viewModel.navigationCommand.postValue(
-                   NavigationCommand.Back)
-           }
+                _viewModel.latitude.postValue(location?.latitude)
+                _viewModel.longitude.postValue(location?.longitude)
+                _viewModel.reminderSelectedLocationStr.postValue("User Current Location")
+                _viewModel.navigationCommand.postValue(
+                    NavigationCommand.Back
+                )
+            }
         }
     }
 
     private fun setUserLocationMarkAndMoveCamera(location: Location?) {
-        val userLocation = LatLng(location!!.latitude, location.longitude)
-        map.moveCamera(CameraUpdateFactory.newLatLngZoom(userLocation, ZOOM_VALUE))
-        map.addMarker(MarkerOptions().position(userLocation))
+        location.let {
+            val userLocation = LatLng(it!!.latitude, it.longitude)
+            map.moveCamera(CameraUpdateFactory.newLatLngZoom(userLocation, ZOOM_VALUE))
+            map.addMarker(MarkerOptions().position(userLocation))
+        }
     }
 }
 
