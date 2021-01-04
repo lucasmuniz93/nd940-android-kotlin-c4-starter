@@ -95,7 +95,7 @@ class SaveReminderFragment : BaseFragment() {
     }
 
     private fun addGeoFence(latitude: Double, longitude: Double, reminderId: String) {
-        val geoFenceAddedMessage = getString(R.string.geofence_added)
+        val geoFenceAddedMessage = getString(R.string.geofence_entered)
         val geofenceAddedFailed = getString(R.string.error_adding_geofence)
         val geofence = Geofence.Builder()
             .setRequestId(reminderId)
