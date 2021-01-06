@@ -82,4 +82,22 @@ class SaveReminderViewModelTest {
         // Then the navigation back event is triggered
         Assert.assertEquals(navigationCommand, NavigationCommand.Back)
     }
+
+    @Test
+    fun validateEnteredData_ReturnsTrue() {
+        // Given a fresh ViewModel and a reminder
+        reminder = ReminderDataItem(
+            title = "Title",
+            description = "Description",
+            location = "Location",
+            latitude = 100.00,
+            longitude = 50.00
+        )
+
+        // When validate the reminder
+        val value = saveReminderViewModel.validateEnteredData(reminder)
+
+        // Then the return is true
+        Assert.assertThat(value, `is`(true))
+    }
 }
