@@ -63,4 +63,23 @@ class SaveReminderViewModelTest {
         val showToastValue = saveReminderViewModel.showToast.getOrAwaitValue()
         Assert.assertEquals(showToastValue, context.resources.getString(R.string.reminder_saved))
     }
+
+    @Test
+    fun saveReminder_navigationBackCommand() {
+        // GIVE a fresh viewmodel and reminder
+        reminder = ReminderDataItem(
+            title = "Title",
+            description = "Description",
+            location = "Location",
+            latitude = 100.00,
+            longitude = 50.00
+        )
+
+        // WHEN adding a new reminder
+        saveReminderViewModel.saveReminder(reminder)
+        val navigationCommand = saveReminderViewModel.navigationCommand.getOrAwaitValue()
+
+        // Then the navigation back event is triggered
+        Assert.assertEquals(navigationCommand, NavigationCommand.Back)
+    }
 }
