@@ -1,16 +1,66 @@
 package com.udacity.project4.locationreminders.savereminder
 
+import android.app.Application
+import android.os.Build
+import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.udacity.project4.R
+import com.udacity.project4.base.NavigationCommand
+import com.udacity.project4.locationreminders.data.FakeDataSource
+import com.udacity.project4.locationreminders.getOrAwaitValue
+import com.udacity.project4.locationreminders.reminderslist.ReminderDataItem
 
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.junit.runner.RunWith
+import org.robolectric.annotation.Config
+import org.hamcrest.Matchers.`is`
+import org.junit.*
+import org.koin.core.context.stopKoin
 
+@Config(sdk = [Build.VERSION_CODES.O_MR1])
 @ExperimentalCoroutinesApi
 @RunWith(AndroidJUnit4::class)
 class SaveReminderViewModelTest {
 
+    private lateinit var context: Application
+    private lateinit var reminder: ReminderDataItem
+    private lateinit var fakeDataSource: FakeDataSource
+    private lateinit var saveReminderViewModel: SaveReminderViewModel
 
     //TODO: provide testing to the SaveReminderView and its live data objects
 
+    @get:Rule
+    var instantExecutorRule = InstantTaskExecutorRule()
 
+    @Before
+    fun init() {
+        fakeDataSource = FakeDataSource()
+        context = ApplicationProvider.getApplicationContext()
+        saveReminderViewModel = SaveReminderViewModel(context, fakeDataSource)
+    }
+
+    @After
+    fun tearDown() {
+        stopKoin()
+    }
+
+    @Test
+    fun saveReminder_showToastSaved() {
+        // Given a fresh ViewModel and a reminder
+        reminder = ReminderDataItem(
+            title = "Title",
+            description = "Description",
+            location = "Location",
+            latitude = 100.00,
+            longitude = 50.00
+        )
+
+        // When adding a new reminder
+        saveReminderViewModel.saveReminder(reminder)
+
+        // Then the toast event is triggered
+        val showToastValue = saveReminderViewModel.showToast.getOrAwaitValue()
+        Assert.assertEquals(showToastValue, context.resources.getString(R.string.reminder_saved))
+    }
 }
