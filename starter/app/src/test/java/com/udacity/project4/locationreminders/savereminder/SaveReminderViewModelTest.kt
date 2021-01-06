@@ -123,4 +123,27 @@ class SaveReminderViewModelTest {
             context.resources.getString(R.string.err_enter_title)
         )
     }
+
+    @Test
+    fun validateEnteredData_EmptyLocationAndSnackbar() {
+        // Given a fresh ViewModel and a reminder without a location
+        reminder = ReminderDataItem(
+            title = "Title",
+            description = "Description",
+            location = null,
+            latitude = 100.00,
+            longitude = 50.00
+        )
+
+        // When validate the reminder and snackbar
+        val value = saveReminderViewModel.validateEnteredData(reminder)
+        val snackbarValue = saveReminderViewModel.showSnackBarInt.getOrAwaitValue()
+
+        // Then the return is true
+        Assert.assertThat(value, `is`(false))
+        Assert.assertEquals(
+            context.getString(snackbarValue),
+            context.resources.getString(R.string.err_select_location)
+        )
+    }
 }
