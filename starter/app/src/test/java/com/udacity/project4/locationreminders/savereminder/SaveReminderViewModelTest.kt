@@ -7,11 +7,13 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.udacity.project4.R
 import com.udacity.project4.base.NavigationCommand
+import com.udacity.project4.locationreminders.MainCoroutineRule
 import com.udacity.project4.locationreminders.data.FakeDataSource
 import com.udacity.project4.locationreminders.getOrAwaitValue
 import com.udacity.project4.locationreminders.reminderslist.ReminderDataItem
 
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
 import org.hamcrest.Matchers.`is`
@@ -32,6 +34,10 @@ class SaveReminderViewModelTest {
 
     @get:Rule
     var instantExecutorRule = InstantTaskExecutorRule()
+
+    @ExperimentalCoroutinesApi
+    @get:Rule
+    private var mainCoroutineScopeRule = MainCoroutineRule()
 
     @Before
     fun init() {
@@ -81,6 +87,32 @@ class SaveReminderViewModelTest {
 
         // Then the navigation back event is triggered
         Assert.assertEquals(navigationCommand, NavigationCommand.Back)
+    }
+
+
+    @Test
+    fun saveReminder_loading() {
+        // GIVE a fresh viewmodel and reminder
+        reminder = ReminderDataItem(
+            title = "Title",
+            description = "Description",
+            location = "Location",
+            latitude = 100.00,
+            longitude = 50.00
+        )
+
+        mainCoroutineScopeRule.pauseDispatcher()
+
+
+        saveReminderViewModel.saveReminder(reminder)
+
+        val showLoadingValue = saveReminderViewModel.showLoading.getOrAwaitValue()
+        Assert.assertThat(showLoadingValue, `is`(true))
+
+        mainCoroutineScopeRule.resumeDispatcher()
+
+        val showLoadingValueAgain = saveReminderViewModel.showLoading.getOrAwaitValue()
+        Assert.assertThat(showLoadingValueAgain, `is`(false))
     }
 
     @Test
