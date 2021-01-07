@@ -85,7 +85,7 @@ class RemindersActivityTest :
     }
 
     @Test
-    fun createReminder_MissingTitle() {
+    fun createReminder_WithoutTitle() {
 
         val activityScenario = ActivityScenario.launch(RemindersActivity::class.java)
 
@@ -99,7 +99,7 @@ class RemindersActivityTest :
     }
 
     @Test
-    fun createReminder_MissingLocation() {
+    fun createReminder_WithoutLocation() {
 
         val activityScenario = ActivityScenario.launch(RemindersActivity::class.java)
 

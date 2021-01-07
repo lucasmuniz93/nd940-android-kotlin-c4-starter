@@ -32,7 +32,7 @@ class RemindersLocalRepositoryTest {
     var instantExecutorRule = InstantTaskExecutorRule()
 
     @Before
-    fun setup() {
+    fun init() {
         // using an in-memory database for testing, since it doesn't survive killing the process
         database = Room.inMemoryDatabaseBuilder(
             ApplicationProvider.getApplicationContext(),
@@ -55,17 +55,20 @@ class RemindersLocalRepositoryTest {
 
     @Test
     fun saveReminder_retrieverReminder() = runBlocking {
+        // Giver a new reminder
         val reminder = ReminderDTO(
             "title",
             "description",
             "location",
             0.0,
-            0.0)
+            0.0
+        )
 
+        // When the reminders is saved
         localDataSource.saveReminder(reminder)
-
         val reminderFromDataSource = localDataSource.getReminder(reminder.id)
 
+        // Then the value from data source is the same that the created
         assertThat(reminderFromDataSource, not(nullValue()))
         reminderFromDataSource as Result.Success
         assertThat(reminderFromDataSource.data.title, `is`(reminder.title))
@@ -77,29 +80,35 @@ class RemindersLocalRepositoryTest {
 
     @Test
     fun saveReminders_retrieveAll() = runBlocking {
+        // Giver new reminders
         val reminder1 = ReminderDTO(
             "title1",
             "description1",
             "location1",
             0.0,
-            0.0)
+            0.0
+        )
         val reminder2 = ReminderDTO(
             "title2",
             "description2",
             "location2",
             0.0,
-            0.0)
+            0.0
+        )
         val reminder3 = ReminderDTO(
             "title3",
             "description3",
             "location3",
             0.0,
-            0.0)
+            0.0
+        )
 
+        // When the reminders is saved
         localDataSource.saveReminder(reminder1)
         localDataSource.saveReminder(reminder2)
         localDataSource.saveReminder(reminder3)
 
+        // Then the value in the list is the same that the created
         val reminders = localDataSource.getReminders() as Result.Success
         assertThat(reminders, not(nullValue()))
         assertThat(reminders.data.size, `is`(3))
@@ -109,30 +118,36 @@ class RemindersLocalRepositoryTest {
     }
 
     @Test
-    fun deleteAllRemindersAfterInsert() = runBlocking {
+    fun saveReminders_AndRemoveALL() = runBlocking {
+        // Giver new reminders
         val reminder1 = ReminderDTO(
             "title1",
             "description1",
             "location1",
             0.0,
-            0.0)
+            0.0
+        )
         val reminder2 = ReminderDTO(
             "title2",
             "description2",
             "location2",
             0.0,
-            0.0)
+            0.0
+        )
         val reminder3 = ReminderDTO(
             "title3",
             "description3",
             "location3",
             0.0,
-            0.0)
+            0.0
+        )
 
+        // When the reminders is saved
         localDataSource.saveReminder(reminder1)
         localDataSource.saveReminder(reminder2)
         localDataSource.saveReminder(reminder3)
 
+        // Then the value in the list is the same that the created
         val reminders = localDataSource.getReminders() as Result.Success
         assertThat(reminders, not(nullValue()))
         assertThat(reminders.data.size, `is`(3))
@@ -140,7 +155,10 @@ class RemindersLocalRepositoryTest {
         assertThat(reminders.data[1], `is`(reminder2))
         assertThat(reminders.data[2], `is`(reminder3))
 
+        // When the reminders is removed
         localDataSource.deleteAllReminders()
+
+        // Then the value in the list is zero
         val remindersAfterDelete = localDataSource.getReminders() as Result.Success
         assertThat(remindersAfterDelete, not(nullValue()))
         assertThat(remindersAfterDelete.data.size, `is`(0))
