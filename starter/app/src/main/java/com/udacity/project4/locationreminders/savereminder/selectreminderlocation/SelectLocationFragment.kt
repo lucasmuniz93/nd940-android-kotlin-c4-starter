@@ -5,6 +5,7 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.content.res.Resources
+import android.location.Location
 import android.os.Bundle
 import android.util.Log
 import android.view.*
@@ -20,10 +21,12 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
 import com.udacity.project4.R
 import com.udacity.project4.base.BaseFragment
+import com.udacity.project4.base.NavigationCommand
 import com.udacity.project4.databinding.FragmentSelectLocationBinding
 import com.udacity.project4.locationreminders.savereminder.SaveReminderViewModel
 import com.udacity.project4.utils.setDisplayHomeAsUpEnabled
 import org.koin.android.ext.android.inject
+import java.util.*
 
 class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 
@@ -49,19 +52,22 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         setHasOptionsMenu(true)
         setDisplayHomeAsUpEnabled(true)
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireContext())
-        binding.btnSave.setOnClickListener {
-            onLocationSelected()
-        }
 
         return binding.root
     }
 
     private fun onLocationSelected() {
-        _viewModel.selectedPOI.value = currentPoi
-        _viewModel.reminderSelectedLocationStr.value = currentPoi?.name
-        _viewModel.latitude.value = currentPoi?.latLng?.latitude
-        _viewModel.longitude.value = currentPoi?.latLng?.longitude
-        findNavController().navigateUp()
+        map.setOnPoiClickListener { poi ->
+            _viewModel.showToast.postValue("Point of interest selected")
+            _viewModel.selectedPOI.postValue(poi)
+            _viewModel.latitude.postValue(poi.latLng.latitude)
+            _viewModel.longitude.postValue(poi.latLng.longitude)
+            _viewModel.reminderSelectedLocationStr.postValue(poi.name)
+            _viewModel.navigationCommand.postValue(
+                NavigationCommand.Back
+            )
+
+        }
     }
 
     override fun onMapReady(googleMap: GoogleMap) {
@@ -69,7 +75,9 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 
         setPoiClick(map)
         setMapStyle(map)
+        onLocationSelected()
         enableMyLocation()
+        getLastLocationAndSetUserLocation()
     }
 
     private fun setMapStyle(map: GoogleMap) {
@@ -130,15 +138,12 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 
     private fun setPoiClick(map: GoogleMap) {
         map.setOnPoiClickListener { poi ->
-            binding.btnSave.visibility = View.VISIBLE
-            currentPoi = poi
-            marker?.remove()
-            marker = map.addMarker(
+            val poiMarker = map.addMarker(
                 MarkerOptions()
                     .position(poi.latLng)
                     .title(poi.name)
             )
-            marker?.showInfoWindow()
+            poiMarker.showInfoWindow()
         }
     }
 
@@ -183,5 +188,34 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         const val TAG = "SelectLocationFragment"
     }
 
+    private fun getLastLocationAndSetUserLocation() {
+        if (isPermissionGranted()) {
+            val fusedLocationClient =
+                LocationServices.getFusedLocationProviderClient(requireContext())
+            fusedLocationClient.lastLocation
+                .addOnSuccessListener { location: Location? ->
+                    location.let {
+                        getCurrentlocation()
+                        setUserCurrentLocationListener(location)
+                    }
+                }
+        }
+    }
+
+
+    private fun setUserCurrentLocationListener(location: Location?) {
+        binding.btnSave.setOnClickListener {
+            location.let {
+                _viewModel.showToast.postValue("User Current Location")
+//                       _viewModel.selectedPOI.postValue(it)
+                _viewModel.latitude.postValue(location?.latitude)
+                _viewModel.longitude.postValue(location?.longitude)
+                _viewModel.reminderSelectedLocationStr.postValue("User Current Location")
+                _viewModel.navigationCommand.postValue(
+                    NavigationCommand.Back
+                )
+            }
+        }
+    }
 
 }
