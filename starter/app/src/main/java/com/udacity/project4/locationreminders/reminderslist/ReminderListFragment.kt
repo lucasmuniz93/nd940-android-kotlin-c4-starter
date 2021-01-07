@@ -1,5 +1,6 @@
 package com.udacity.project4.locationreminders.reminderslist
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.*
@@ -8,6 +9,7 @@ import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
 import com.firebase.ui.auth.AuthUI
 import com.udacity.project4.R
+import com.udacity.project4.authentication.AuthenticationActivity
 import com.udacity.project4.base.BaseFragment
 import com.udacity.project4.base.NavigationCommand
 import com.udacity.project4.databinding.FragmentRemindersBinding
@@ -66,15 +68,6 @@ class ReminderListFragment : BaseFragment() {
         )
     }
 
-    private fun navigateToLogin() {
-        //use the navigationCommand live data to navigate between the fragments
-        _viewModel.navigationCommand.postValue(
-            NavigationCommand.To(
-                ReminderListFragmentDirections.actionReminderListFragmentToAuthenticationActivity()
-            )
-        )
-    }
-
     private fun setupRecyclerView() {
         val adapter = RemindersListAdapter {
         }
@@ -87,7 +80,7 @@ class ReminderListFragment : BaseFragment() {
         when (item.itemId) {
             R.id.logout -> {
                 AuthUI.getInstance().signOut(requireContext())
-                findNavController().navigate(ReminderListFragmentDirections.actionReminderListFragmentToAuthenticationActivity())
+                requireActivity().startActivity(Intent(requireContext(), AuthenticationActivity::class.java))
             }
         }
         return super.onOptionsItemSelected(item)
